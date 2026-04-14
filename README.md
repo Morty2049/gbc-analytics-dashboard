@@ -40,14 +40,91 @@
 
 ---
 
-## Решение (в работе)
+## Реализация
 
-Стек: **Next.js 15 + Tremor** (Vercel) → **Supabase** (Postgres) ← **RetailCRM API v5** + **Telegram bot**.
+### Ссылки
 
-Документация решения:
-- [docs/gsd-brief.md](docs/gsd-brief.md) — финальный план, архитектура, схема БД
-- [docs/retailcrm-api.md](docs/retailcrm-api.md) — выжимка по retailCRM API v5
-- [docs/stack.md](docs/stack.md) — выбор инструментов
-- [.env.example](.env.example) — все необходимые переменные окружения
+- **Дашборд:** https://gbc-analytics-dashboard-ochre.vercel.app
+- **Telegram-бот:** [@gbc_analytics_best_bot](https://t.me/gbc_analytics_best_bot)
 
-Раздел "промпты / грабли / решения" будет дополняться по ходу работы.
+### Стек
+
+| Слой | Технология |
+|---|---|
+| Frontend | Next.js 15 (App Router) + Recharts + Tailwind CSS 4 |
+| Хостинг | Vercel (Hobby) |
+| БД | Supabase Postgres (RLS, anon read) |
+| CRM | RetailCRM API v5 (демо-аккаунт `quaso`) |
+| Бот | Telegram Bot API через webhook на Vercel |
+
+### Архитектура
+
+```
+RetailCRM ──webhook──▶ Vercel /api/webhooks/retailcrm ─┐
+   │                                                    ├─▶ Supabase (orders)
+   └──polled──◀── Vercel Cron /api/sync ────────────────┘            │
+                                                                     ▼
+                                       Telegram Bot ◀── alert (порог 50 000 ₸)
+                                                                     ▲
+                                       /api/telegram/webhook ◀── BotFather
+```
+
+### Дашборд (4 метрики)
+
+1. **Заказы по дням** — BarChart
+2. **Выручка по дням** — BarChart
+3. **Топ городов** — PieChart
+4. **Каналы (utm_source)** — горизонтальный BarChart
+5. **Таблица последних заказов** с фильтром по статусу
+
+### Telegram-бот
+
+| Команда | Действие |
+|---|---|
+| `/start` | Подписка на алерты о крупных заказах |
+| `/test_order` | Создаёт случайный заказ в RetailCRM + Supabase + шлёт алерт |
+| `/stats` | Количество заказов, выручка, ссылка на дашборд |
+
+### API endpoints
+
+| Endpoint | Метод | Назначение |
+|---|---|---|
+| `/api/sync` | GET | Cron-синхронизация RetailCRM → Supabase |
+| `/api/webhooks/retailcrm` | POST | Webhook от RetailCRM: upsert + alert |
+| `/api/telegram/webhook` | POST | Webhook от Telegram: команды бота |
+| `/api/notify` | POST | Ручная отправка алертов подписчикам |
+
+### Скрипты
+
+- `scripts/upload-orders.mjs` — загрузка mock_orders.json в RetailCRM (батчи по 50)
+- `scripts/sync-to-supabase.mjs` — одноразовая синхронизация CRM → Supabase
+- `scripts/check-retailcrm.mjs` — валидация API-ключа и справочников
+
+### Промпты и грабли
+
+**Какие промпты давал Claude Code:**
+
+1. `init repo` — scaffolding Next.js 15 проекта с TypeScript, Tailwind, Supabase, Recharts
+2. Валидация RetailCRM API — проверка credentials, справочников, создание тестового заказа
+3. Загрузка 50 mock-заказов через `/api/v5/orders/upload`
+4. Создание схемы Supabase через MCP (apply_migration)
+5. Полный цикл: создание заказа → sync → dashboard → Telegram alert
+
+**Где застрял и как решил:**
+
+| Проблема | Решение |
+|---|---|
+| Tremor v3 не работает с Tailwind v4 (чёрно-белые графики, сломанный grid) | Заменил на Recharts + нативный Tailwind grid |
+| `/api/v5/orders/upload` не сохраняет ФИО клиентов | Обновил каждый заказ через `/orders/{id}/edit` |
+| `filter[updatedAtFrom]` не работает в RetailCRM | Нашёл правильное имя: `createdAtFrom` |
+| Vercel Hobby не поддерживает cron чаще раза в день | Изменил расписание с `*/15 * * * *` на `0 8 * * *` |
+| `npm install` падает на Vercel из-за peer deps (React 19 vs Tremor) | Добавил `.npmrc` с `legacy-peer-deps=true` |
+| Supabase `sb_publishable_` ключ — новый формат, не JWT | Работает нативно с `@supabase/supabase-js` |
+
+### Документация
+
+- [docs/gsd-brief.md](docs/gsd-brief.md) — план, архитектура, схема БД
+- [docs/adr.md](docs/adr.md) — ADR с полным контекстом для handover
+- [docs/retailcrm-api.md](docs/retailcrm-api.md) — выжимка по RetailCRM API v5
+- [docs/stack.md](docs/stack.md) — обоснование выбора инструментов
+- [.env.example](.env.example) — шаблон переменных окружения
