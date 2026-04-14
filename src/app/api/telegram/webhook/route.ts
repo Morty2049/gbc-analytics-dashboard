@@ -99,6 +99,29 @@ export async function POST(req: NextRequest) {
       const crmOrder = crmJson.order;
       const orderId = crmOrder.id;
       const orderNumber = crmOrder.number;
+      const crmCustomerId = crmOrder.customer?.id;
+
+      // RetailCRM /orders/create doesn't persist firstName/lastName/phones/email
+      // on the customer entity — it only stores them in the order snapshot.
+      // To make the "Customers" list show proper names, we push the data
+      // explicitly via /customers/{id}/edit right after create.
+      if (crmCustomerId) {
+        const customerBody = new URLSearchParams();
+        customerBody.set("site", "quaso");
+        customerBody.set("by", "id");
+        customerBody.set(
+          "customer",
+          JSON.stringify({
+            firstName: o.firstName,
+            lastName: o.lastName,
+            phones: [{ number: o.phone }],
+          }),
+        );
+        await fetch(
+          `${BASE}/api/v5/customers/${crmCustomerId}/edit?apiKey=${KEY}`,
+          { method: "POST", body: customerBody },
+        ).catch((err) => console.error("customer edit failed:", err));
+      }
 
       // Upsert into Supabase
       await sb.from("orders").upsert({
