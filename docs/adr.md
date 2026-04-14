@@ -19,11 +19,9 @@ Deliverables:
 
 ## 2. Рабочая директория и git
 
-- **Корень проекта:** `/Users/leks/codeRepo/my_projects/gbc-retail-crm/gbc-analytics-dashboard`
-  (это и есть клон форка; внешний wrapper-репо удалён)
+- **Корень проекта:** клон форка репозитория
 - **origin:** `https://github.com/Morty2049/gbc-analytics-dashboard.git`
 - **Branch:** `main`, ahead of `origin/main` by 1 commit (`f2ba5ed` — не запушен, ждёт подтверждения)
-- **Git author:** `Morty2049 <palexe888@gmail.com>` (глобальный config)
 
 Untracked / uncommitted (на момент handover):
 - `scripts/check-retailcrm.mjs` — валидатор API, работает
@@ -49,17 +47,17 @@ Untracked / uncommitted (на момент handover):
 
 `.env.local` заполнен, `.env.example` — чистый шаблон (в git).
 
-Готовые значения (в `.env.local`):
-- **RetailCRM** ✅ `RETAILCRM_URL=https://quaso.retailcrm.ru`, `RETAILCRM_API_KEY`, `RETAILCRM_SITE=quaso`
-- **Supabase** ✅ `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (новый формат `sb_publishable_...`), `SUPABASE_PROJECT_REF=aljlvlvgdfwxikhmaona`
-- **Telegram** ✅ `TELEGRAM_BOT_TOKEN` (для `@gbc_analytics_best_bot`, bot user_id `8643614821`), `TELEGRAM_BOT_USERNAME=gbc_analytics_best_bot`, `TELEGRAM_TEST_CHAT_ID=911650186` (личный аккаунт Aleksei), `TELEGRAM_WEBHOOK_SECRET` (сгенерирован)
+Готовые значения (в `.env.local`, не коммитится):
+- **RetailCRM** ✅ `RETAILCRM_URL`, `RETAILCRM_API_KEY`, `RETAILCRM_SITE`
+- **Supabase** ✅ `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (новый формат `sb_publishable_...`), `SUPABASE_PROJECT_REF`
+- **Telegram** ✅ `TELEGRAM_BOT_TOKEN` (для `@gbc_analytics_best_bot`), `TELEGRAM_BOT_USERNAME`, `TELEGRAM_TEST_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`
 - **App** ✅ `ORDER_ALERT_THRESHOLD_KZT=50000`
 
 Пустое, заполнится по ходу:
-- `SUPABASE_SERVICE_ROLE_KEY` — возьмём перед деплоем на Vercel (Project API Keys → secret `sb_secret_MP2ms...` → Reveal & copy)
+- `SUPABASE_SERVICE_ROLE_KEY` — возьмём перед деплоем на Vercel (Project API Keys → secret → Reveal & copy)
 - `NEXT_PUBLIC_APP_URL` — после первого Vercel-деплоя
 
-**Примечание по безопасности:** Telegram bot token был один раз показан в чате с агентом. Пользователь решил не ротировать (demo-бот, риск минимальный). Для prod-ключей такое не повторять.
+Шаблон всех переменных — в [.env.example](../.env.example).
 
 ## 5. MCP серверы
 
@@ -157,13 +155,13 @@ Untracked / uncommitted (на момент handover):
 ## 9. Открытые решения на следующую сессию
 
 - Сразу писать Next.js проект в корне fork или в подпапке `app/` рядом с `mock_orders.json`? **Рекомендация:** в корне, `mock_orders.json` остаётся, `scripts/` остаются, добавляются `app/`, `package.json`, `next.config.js`, etc. — так Vercel подхватит root automatically.
-- Для бота `/start` подписки — использовать Telegram webhook (нужен public URL, т.е. после первого деплоя) или polling через cron для локальной разработки? **Рекомендация:** webhook после деплоя, до того момента используем `TELEGRAM_TEST_CHAT_ID=911650186` напрямую.
+- Для бота `/start` подписки — использовать Telegram webhook (нужен public URL, т.е. после первого деплоя) или polling через cron для локальной разработки? **Рекомендация:** webhook после деплоя, до того момента используем `TELEGRAM_TEST_CHAT_ID` напрямую.
 - utm_source custom field — создавать программно или вручную в RetailCRM UI? **Рекомендация:** вручную (1 клик), быстрее.
 
 ## 10. Команды для рестарта в новой сессии
 
 ```bash
-cd /Users/leks/codeRepo/my_projects/gbc-retail-crm/gbc-analytics-dashboard
+cd <project root>
 
 # Проверить что всё на месте
 git status
