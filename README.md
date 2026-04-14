@@ -37,3 +37,17 @@
 ## Как сдать
 
 Отправь результат в Telegram: @DmitriyKrasnikov
+
+---
+
+## Решение (в работе)
+
+Стек: **Next.js 15 + Tremor** (Vercel) → **Supabase** (Postgres) ← **RetailCRM API v5** + **Telegram bot**.
+
+Документация решения:
+- [docs/gsd-brief.md](docs/gsd-brief.md) — финальный план, архитектура, схема БД
+- [docs/retailcrm-api.md](docs/retailcrm-api.md) — выжимка по retailCRM API v5
+- [docs/stack.md](docs/stack.md) — выбор инструментов
+- [.env.example](.env.example) — все необходимые переменные окружения
+
+Раздел "промпты / грабли / решения" будет дополняться по ходу работы.
