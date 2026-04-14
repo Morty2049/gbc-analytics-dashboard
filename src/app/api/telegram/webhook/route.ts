@@ -39,10 +39,25 @@ export async function POST(req: NextRequest) {
         chat_id: chatId,
         username: message.from?.username ?? null,
       });
-      await sendMessage(
-        chatId,
-        "Subscribed to order alerts.\n\nCommands:\n/test_order — create a random test order in RetailCRM\n/stats — quick stats",
-      );
+      const welcome = [
+        "👋 <b>GBC Analytics Bot</b>",
+        "",
+        "Бот отслеживает заказы в RetailCRM и присылает алерты, когда появляется крупный заказ (от <b>50 000 KZT</b>). Работает в связке с дашбордом аналитики на Next.js + Supabase.",
+        "",
+        "<b>Архитектура:</b>",
+        "RetailCRM → webhook → Supabase → Dashboard + Telegram alerts",
+        "",
+        "<b>Команды:</b>",
+        "/start — подписаться на алерты о крупных заказах",
+        "/test_order — создать случайный тестовый заказ в RetailCRM (полный цикл: CRM → Supabase → алерт если &gt; 50K)",
+        "/stats — статистика: количество заказов, выручка, ссылка на дашборд",
+        "",
+        "<b>Дашборд:</b> https://gbc-analytics-dashboard-ochre.vercel.app",
+        "<b>Исходники:</b> https://github.com/Morty2049/gbc-analytics-dashboard",
+        "",
+        "Автор: <a href=\"https://github.com/Morty2049\">@Morty2049</a>",
+      ].join("\n");
+      await sendMessage(chatId, welcome);
       return NextResponse.json({ ok: true });
     }
 
