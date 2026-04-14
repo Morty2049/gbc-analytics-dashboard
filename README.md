@@ -110,16 +110,29 @@ RetailCRM ──webhook──▶ Vercel /api/webhooks/retailcrm ─┐
 4. Создание схемы Supabase через MCP (apply_migration)
 5. Полный цикл: создание заказа → sync → dashboard → Telegram alert
 
-**Где застрял и как решил:**
+**Где застрял и как решил (наш код):**
 
 | Проблема | Решение |
 |---|---|
 | Tremor v3 не работает с Tailwind v4 (чёрно-белые графики, сломанный grid) | Заменил на Recharts + нативный Tailwind grid |
-| `/api/v5/orders/upload` не сохраняет ФИО клиентов | Обновил каждый заказ через `/orders/{id}/edit` |
+| `/api/v5/orders/upload` не сохраняет ФИО клиентов | Обновил каждый заказ через `/orders/{id}/edit` + customer через `/customers/{id}/edit` |
 | `filter[updatedAtFrom]` не работает в RetailCRM | Нашёл правильное имя: `createdAtFrom` |
+| `/api/sync` был upsert-only → удалённые в CRM заказы оставались в Supabase | Добавил diff-delete: сравниваю IDs из CRM с Supabase, удаляю лишние |
+| Sync затирал customer_name/utm/даты NULL'ами (RetailCRM list endpoint их не отдаёт) | Field-level merge: fetch existing → `r.field ?? prev.field` |
 | Vercel Hobby не поддерживает cron чаще раза в день | Изменил расписание с `*/15 * * * *` на `0 8 * * *` |
 | `npm install` падает на Vercel из-за peer deps (React 19 vs Tremor) | Добавил `.npmrc` с `legacy-peer-deps=true` |
 | Supabase `sb_publishable_` ключ — новый формат, не JWT | Работает нативно с `@supabase/supabase-js` |
+
+**Грабли на стороне RetailCRM (не зависят от нашего кода):**
+
+| Проблема | Влияние |
+|---|---|
+| Batch upload `/api/v5/orders/upload` создаёт customer entity без `firstName`/`lastName`/`phone`/`email` — только id | Пришлось после upload отдельно обновлять каждого customer через `/api/v5/customers/{id}/edit`. Без этого в "Список клиентов" все клиенты висят как "ФИО не указано" |
+| В "Список клиентов" колонки `Кол-во заказов`, `Средний чек`, `Сумма заказов` показывают `0 KZT` даже когда у клиента есть заказы с суммами | Агрегаты не пересчитываются синхронно (фоновый job, в демо-аккаунте видимо не работает). При этом в `/orders` те же суммы корректные |
+| Ротация / удаление API-ключей неинтуитивно запрятаны: Settings → Integration → API access keys → нужно провалиться в конкретный ключ чтобы увидеть кнопку "Отключить" | Для быстрой ротации после случайной утечки — очень неудобно. В первый раз сложно найти |
+| Создание заказа с новым товаром через UI — добавление товара в карточку зависает, товар не сохраняется | Не удалось дотестировать создание заказа руками. Обошли созданием через API (`POST /api/v5/orders/create`) из команды `/test_order` бота |
+| `/reference/order-types` в демо-аккаунте `quaso` вернул только один тип `main`, хотя в `mock_orders.json` был `eshop-individual` | Маппим все заказы на `main` при upload |
+| `customFields.utm_source` не создан автоматически → custom field нужно заводить вручную в Settings → Custom Fields → Orders | Для MVP положили `utm_source` в `customFields` при create, но при чтении через `/orders` он не возвращается. В Supabase восстановили из mock_orders напрямую |
 
 ### Документация
 
