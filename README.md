@@ -44,8 +44,11 @@
 
 ### Ссылки
 
-- **Дашборд:** https://gbc-analytics-dashboard-ochre.vercel.app
+- **Дашборд:** https://gbc-analytics-dashboard-ochre.vercel.app 
+<img width="820" height="1203" alt="image" src="https://github.com/user-attachments/assets/7b5ab9dd-340b-477b-822a-d72dee8e99e9" />
+
 - **Telegram-бот:** [@gbc_analytics_best_bot](https://t.me/gbc_analytics_best_bot)
+<img width="513" height="799" alt="image" src="https://github.com/user-attachments/assets/16697926-ac12-491c-815d-050f2b25a361" />
 
 ### Стек
 
